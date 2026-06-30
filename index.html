@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lico Privacy Policy</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1a1a1a;
+    background: #f7f8fa;
+    line-height: 1.7;
+    padding: 40px 20px;
+  }
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    padding: 48px 56px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  h1 { font-size: 28px; margin-bottom: 8px; }
+  .updated { color: #888; font-size: 14px; margin-bottom: 32px; }
+  h2 { font-size: 19px; margin: 32px 0 12px; }
+  p, li { font-size: 15px; color: #333; margin-bottom: 10px; }
+  ul { padding-left: 22px; margin-bottom: 12px; }
+  .highlight {
+    background: #eef4ff;
+    border-left: 3px solid #4a7dff;
+    padding: 14px 18px;
+    border-radius: 0 6px 6px 0;
+    margin: 16px 0;
+  }
+  a { color: #4a7dff; }
+  .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #999; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Lico Privacy Policy</h1>
+  <p class="updated">Last updated: July 1, 2026</p>
+
+  <p>This Privacy Policy describes how the Lico browser extension ("Lico", "the extension", "we", "us") handles your data. By installing and using Lico, you agree to the practices described below.</p>
+
+  <div class="highlight">
+    <strong>Short version:</strong> Lico does <strong>not</strong> collect, transmit, or sell your personal data to the extension developer or any third party. All your data stays on your device.
+  </div>
+
+  <h2>1. Data We Do Not Collect</h2>
+  <p>Lico does not collect, store, or transmit any of the following to the extension developer or any analytics/ advertising services:</p>
+  <ul>
+    <li>Personally identifiable information (name, email, address, etc.)</li>
+    <li>Browsing history or search queries</li>
+    <li>Bookmark contents (bookmarks are read locally and displayed on the start page; they are never uploaded)</li>
+    <li>Tab information (tab data is processed locally in the browser)</li>
+    <li>Device identifiers or location data</li>
+    <li>Analytics, telemetry, or crash reports</li>
+  </ul>
+
+  <h2>2. Data Stored Locally</h2>
+  <p>Lico stores all configuration and user content <strong>locally on your device</strong> using the browser's built-in storage (<code>localStorage</code> and <code>chrome.storage</code>). This includes:</p>
+  <ul>
+    <li>Start page layout and appearance preferences</li>
+    <li>User-created notes and widgets</li>
+    <li>AI assistant API endpoint URL and API key (entered by the user, stored locally)</li>
+    <li>Plugin configurations and user-installed plugin files</li>
+    <li>Bookmarks cache (read from the browser's native bookmarks, never uploaded)</li>
+  </ul>
+  <p>This data never leaves your device unless you explicitly use a feature that sends data to a service you configured (see Section 3).</p>
+
+  <h2>3. Third-Party Services (User-Configured)</h2>
+  <p>Lico supports an AI assistant feature that calls <strong>OpenAI-compatible chat completion APIs</strong>. Important points:</p>
+  <ul>
+    <li>The API endpoint URL and API key are <strong>configured by you</strong> in the extension settings.</li>
+    <li>When you send a message to the AI assistant, that message is sent <strong>directly from your browser to the API endpoint you specified</strong>.</li>
+    <li>Lico (the extension developer) does <strong>not</strong> intercept, store, relay, or have access to these messages.</li>
+    <li>The data handling of your chosen AI provider is governed by that provider's privacy policy.</li>
+  </ul>
+  <p>If you do not configure an AI API endpoint, no data is sent anywhere.</p>
+
+  <h2>4. Permissions Justification</h2>
+  <p>Lico requests the following browser permissions. Each is used only for its stated purpose:</p>
+  <ul>
+    <li><strong>storage</strong> — Save your preferences, notes, and settings locally.</li>
+    <li><strong>bookmarks</strong> — Read and display your browser bookmarks on the start page.</li>
+    <li><strong>tabs</strong> — Open, close, switch, and query tabs from the start page.</li>
+    <li><strong>scripting</strong> — Inject content scripts into pages to extract metadata (title, favicon) for display on the start page, on user action.</li>
+    <li><strong>activeTab</strong> — Access the current tab for user-initiated actions like screenshots.</li>
+    <li><strong>debugger</strong> — Use the Chrome DevTools Protocol to capture tab screenshots and perform advanced tab control, only on explicit user action.</li>
+    <li><strong>&lt;all_urls&gt; (host permission)</strong> — Required to call user-configured AI API endpoints (any URL), inject content scripts, and capture screenshots via CDP.</li>
+  </ul>
+
+  <h2>5. Android Device Mirroring (scrcpy)</h2>
+  <p>Lico includes an optional Android device mirroring feature powered by WebUSB and the scrcpy protocol:</p>
+  <ul>
+    <li>Device connection uses the browser's WebUSB API — you must explicitly select and authorize your device.</li>
+    <li>Video and control data flows <strong>directly between your browser and your Android device</strong> over USB.</li>
+    <li>No mirroring data is transmitted to the extension developer or any remote server.</li>
+  </ul>
+
+  <h2>6. Plugin System</h2>
+  <p>Lico supports user-installed plugins (`.Licoplugin` files). Plugins run inside a <strong>sandboxed iframe</strong> with no direct access to the page or your data. Plugins you install are stored locally and executed on your device. Lico does not download or execute remote plugin code.</p>
+
+  <h2>7. Data Security</h2>
+  <p>Since all user data is stored locally in the browser and no data is transmitted to the extension developer, there is no server-side data breach risk associated with Lico. Your AI API key is stored locally; we recommend you do not share your browser profile.</p>
+
+  <h2>8. Children's Privacy</h2>
+  <p>Lico is not directed at children under 13 and does not knowingly collect any data from children.</p>
+
+  <h2>9. Changes to This Policy</h2>
+  <p>If we update this Privacy Policy, we will revise the "Last updated" date above. Continued use of the extension after changes constitutes acceptance of the updated policy.</p>
+
+  <h2>10. Contact</h2>
+  <p>If you have questions about this Privacy Policy, you can contact the developer at: <strong>YOUR_EMAIL@example.com</strong></p>
+
+  <div class="footer">
+    Lico — A new tab page replacement extension for Chrome and Edge.
+  </div>
+</div>
+</body>
+</html>
