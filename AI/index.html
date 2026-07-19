@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stamp Collection</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #f7f7f5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    transition: background 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body.dimmed {
+    background: #1a1a1a;
+  }
+
+  #stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ---------- 邮票 ---------- */
+  .stamp {
+    position: absolute;
+    width: 220px;
+    height: 300px;
+    cursor: pointer;
+    z-index: 1;
+    transition: z-index 0s;
+  }
+
+  .stamp-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+                filter 0.55s ease,
+                opacity 0.55s ease;
+    will-change: transform, filter, opacity;
+    overflow: hidden;
+  }
+
+  /* 悬停：当前抬起，其他压暗 */
+  .stamp:hover {
+    z-index: 50;
+    transition: z-index 0s;
+  }
+  .stamp:hover .stamp-inner {
+    transform: scale(1.06) translateY(-10px);
+    filter: blur(0px) drop-shadow(0 28px 40px rgba(0,0,0,0.14)) !important;
+  }
+
+  /* siblings 在任意邮票悬停时进一步压暗 */
+  #stage:has(.stamp:hover) .stamp:not(:hover) .stamp-inner {
+    filter: blur(6px) brightness(0.88) !important;
+    opacity: 0.55 !important;
+    transform: scale(0.98);
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+                filter 0.6s ease,
+                opacity 0.6s ease;
+  }
+
+  /* 纹理层 */
+  .texture {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .texture::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.07),
+                inset 0 0 50px rgba(0,0,0,0.05);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* 文字 */
+  .stamp-text {
+    position: absolute;
+    z-index: 3;
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(30,30,30,0.75);
+    font-weight: 600;
+    line-height: 1.5;
+    pointer-events: none;
+  }
+  .stamp-text.top-left  { top: 18px; left: 18px; }
+  .stamp-text.bottom-right { bottom: 18px; right: 18px; }
+
+  /* 标签 */
+  .stamp-label {
+    position: absolute;
+    top: -44px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #111;
+    color: #fff;
+    padding: 7px 16px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease, top 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    pointer-events: none;
+    z-index: 10;
+  }
+  .stamp:hover .stamp-label {
+    opacity: 1;
+    top: -40px;
+  }
+
+  /* ==================== 金属光泽 Sheen ==================== */
+  .sheen {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    mix-blend-mode: overlay;
+  }
+  .stamp:hover .sheen {
+    opacity: 1;
+  }
+  .sheen::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 40%;
+    height: 200%;
+    background: linear-gradient(
+      115deg,
+      transparent 30%,
+      rgba(255,255,255,0.18) 45%,
+      rgba(255,255,255,0.35) 50%,
+      rgba(255,255,255,0.18) 55%,
+      transparent 70%
+    );
+    transform: translateX(-120%) rotate(25deg);
+    animation: sheenSweep 1.1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  @keyframes sheenSweep {
+    0%   { transform: translateX(-120%) rotate(25deg); }
+    100% { transform: translateX(350%) rotate(25deg); }
+  }
+
+  /* 再次悬停时重新触发光泽 */
+  .stamp:not(:hover) .sheen::before {
+    animation: none;
+  }
+
+  /* ---------- 背景散列的其他邮票 ---------- */
+  body.dimmed .stamp:not(.active) {
+    opacity: 0;
+    filter: blur(25px) !important;
+    pointer-events: none;
+    transition: opacity 0.6s ease, filter 0.6s ease;
+  }
+
+  /* Active 状态 */
+  .stamp.active {
+    z-index: 100;
+    cursor: default;
+    transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .stamp.active .stamp-inner {
+    filter: blur(0px) drop-shadow(0 30px 60px rgba(0,0,0,0.25)) !important;
+  }
+  .stamp.active .stamp-label,
+  .stamp.active .sheen {
+    opacity: 0;
+  }
+
+  /* 底部提示 */
+  .instruction {
+    position: fixed;
+    bottom: 45px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.35);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.7s ease 0.2s;
+    pointer-events: none;
+    z-index: 200;
+  }
+  body.dimmed .instruction {
+    opacity: 1;
+  }
+
+  /* ==================== 各邮票纹理 ==================== */
+
+  /* New Craft Society —— 等高线地形 */
+  .stamp-new-craft .texture {
+    background:
+      repeating-radial-gradient(ellipse 100px 130px at 20% 30%, transparent 0, transparent 6px, rgba(46, 125, 50, 0.32) 7px, transparent 8px),
+      repeating-radial-gradient(ellipse 140px 100px at 80% 70%, transparent 0, transparent 10px, rgba(46, 125, 50, 0.25) 11px, transparent 12px),
+      repeating-radial-gradient(ellipse 80px 110px at 50% 20%, transparent 0, transparent 5px, rgba(46, 125, 50, 0.38) 6px, transparent 7px),
+      repeating-radial-gradient(ellipse 120px 140px at 60% 85%, transparent 0, transparent 8px, rgba(46, 125, 50, 0.20) 9px, transparent 10px),
+      repeating-radial-gradient(ellipse 90px 90px at 35% 75%, transparent 0, transparent 7px, rgba(46, 125, 50, 0.28) 8px, transparent 9px),
+      linear-gradient(165deg, #e8f5e9 0%, #dcedc8 30%, #c5e1a5 60%, #aed581 100%);
+  }
+  .stamp-new-craft .stamp-text { color: rgba(40, 70, 25, 0.78); }
+
+  /* Kensho —— 黑白 */
+  .stamp-kensho .texture {
+    background:
+      repeating-linear-gradient(45deg, transparent 0, transparent 12px, rgba(0,0,0,0.025) 12px, rgba(0,0,0,0.025) 13px),
+      linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+  }
+  .stamp-kensho .big-num {
+    position: absolute;
+    bottom: 40px;
+    right: 18px;
+    font-size: 42px;
+    font-weight: 300;
+    color: rgba(0,0,0,0.85);
+    letter-spacing: -0.05em;
+    line-height: 1;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .stamp-kensho .c-shape {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70px;
+    height: 70px;
+    border: 10px solid rgba(0,0,0,0.85);
+    border-radius: 50%;
+    border-right-color: transparent;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  /* Gao Han —— 素白 + 中文 */
+  .stamp-gaohan .texture {
+    background:
+      radial-gradient(circle at 25% 25%, rgba(0,0,0,0.03) 0%, transparent 50%),
+      linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);
+  }
+  .stamp-gaohan .stamp-text { color: rgba(0,0,0,0.85); font-size: 11px; }
+  .stamp-gaohan .icon {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 28px;
+    height: 28px;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .stamp-gaohan .icon svg {
+    width: 100%;
+    height: 100%;
+    stroke: rgba(0,0,0,0.8);
+    stroke-width: 1.5;
+    fill: none;
+  }
+
+  /* 照片风 —— 灰度 */
+  .stamp-photo .texture {
+    background:
+      linear-gradient(135deg, #d0d0d0 0%, #9e9e9e 100%);
+    filter: grayscale(0.9) contrast(1.1);
+  }
+  .stamp-photo .stamp-text { color: rgba(255,255,255,0.9); mix-blend-mode: difference; }
+
+  /* 辅助绿邮票 —— 远景 */
+  .stamp-green2 .texture {
+    background: linear-gradient(135deg, #b2dfdb 0%, #80cbc4 100%);
+    opacity: 0.85;
+  }
+</style>
+</head>
+<body>
+
+<div id="stage"></div>
+<div class="instruction">Click anywhere or press ESC</div>
+
+<script>
+/* =========================================================
+   1. 生成邮票齿孔 Mask
+   ========================================================= */
+function createStampMask(w, h, r, gap) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const x = c.getContext('2d');
+
+  x.fillStyle = '#fff';
+  x.fillRect(0, 0, w, h);
+
+  x.fillStyle = '#000';
+  for (let i = gap / 2; i < w; i += gap) {
+    x.beginPath(); x.arc(i, 0, r, 0, Math.PI * 2); x.fill();
+    x.beginPath(); x.arc(i, h, r, 0, Math.PI * 2); x.fill();
+  }
+  for (let i = gap / 2; i < h; i += gap) {
+    x.beginPath(); x.arc(0, i, r, 0, Math.PI * 2); x.fill();
+    x.beginPath(); x.arc(w, i, r, 0, Math.PI * 2); x.fill();
+  }
+  return c.toDataURL();
+}
+
+const MASK_URL = createStampMask(220, 300, 7, 18);
+
+/* =========================================================
+   2. 配置
+   ========================================================= */
+const STAMPS_DATA = [
+  {
+    id: 'new-craft',
+    cls: 'stamp-new-craft',
+    label: 'New Craft Society',
+    html: `
+      <div class="stamp-text top-left">New Craft<br>Society</div>
+      <div class="stamp-text bottom-right">01/2025</div>
+    `,
+    x: '52%', y: '46%',
+    rot: -3,
+    blur: 0,
+    opacity: 1,
+    z: 10
+  },
+  {
+    id: 'kensho',
+    cls: 'stamp-kensho',
+    label: 'Kensho Technologies',
+    html: `
+      <div class="stamp-text top-left">Kensho<br>Technologies</div>
+      <div class="c-shape"></div>
+      <div class="big-num">05</div>
+    `,
+    x: '32%', y: '52%',
+    rot: -14,
+    blur: 2,
+    opacity: 0.9,
+    z: 5
+  },
+  {
+    id: 'gaohan',
+    cls: 'stamp-gaohan',
+    label: 'Gao Han',
+    html: `
+      <div class="stamp-text top-left">高晗<br>GAO HAN</div>
+      <div class="icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+    `,
+    x: '68%', y: '62%',
+    rot: 9,
+    blur: 2.5,
+    opacity: 0.85,
+    z: 4
+  },
+  {
+    id: 'photo',
+    cls: 'stamp-photo',
+    label: 'Space & Time',
+    html: `
+      <div class="stamp-text top-left">SPACE<br>TIME</div>
+      <div class="stamp-text bottom-right">08</div>
+    `,
+    x: '28%', y: '70%',
+    rot: -6,
+    blur: 4,
+    opacity: 0.6,
+    z: 2
+  },
+  {
+    id: 'green2',
+    cls: 'stamp-green2',
+    label: 'Mojave',
+    html: `<div class="stamp-text bottom-right" style="opacity:.6">01/2025</div>`,
+    x: '78%', y: '38%',
+    rot: 16,
+    blur: 3,
+    opacity: 0.7,
+    z: 3
+  }
+];
+
+/* =========================================================
+   3. 初始化 DOM
+   ========================================================= */
+const stage = document.getElementById('stage');
+const stampEls = [];
+
+STAMPS_DATA.forEach(d => {
+  const el = document.createElement('div');
+  el.className = `stamp ${d.cls}`;
+  el.id = d.id;
+  el.style.left = d.x;
+  el.style.top  = d.y;
+  el.style.zIndex = d.z;
+
+  el.innerHTML = `
+    <div class="stamp-label">${d.label}</div>
+    <div class="stamp-inner" style="
+      -webkit-mask-image:url(${MASK_URL});
+      mask-image:url(${MASK_URL});
+      -webkit-mask-size:100% 100%;
+      mask-size:100% 100%;
+      filter:blur(${d.blur}px);
+      opacity:${d.opacity};
+    ">
+      <div class="texture"></div>
+      <div class="sheen"></div>
+      ${d.html}
+    </div>
+  `;
+
+  stage.appendChild(el);
+  stampEls.push({ el, data: d });
+});
+
+/* =========================================================
+   4. 交互逻辑
+   ========================================================= */
+let active = null;
+let time = 0;
+
+function getInitialTransform(d, floatY = 0) {
+  return `translate(-50%, -50%) translateY(${floatY}px) rotate(${d.rot}deg)`;
+}
+
+stampEls.forEach(({ el, data }) => {
+  el.style.transform = getInitialTransform(data);
+});
+
+function tick() {
+  if (!active) {
+    time += 0.015;
+    stampEls.forEach(({ el, data }) => {
+      if (el.classList.contains('active')) return;
+      const off = Math.sin(time + data.rot) * 4;
+      el.style.transform = getInitialTransform(data, off);
+    });
+  }
+  requestAnimationFrame(tick);
+}
+tick();
+
+function activate(targetEl) {
+  if (active === targetEl) return;
+  deactivate();
+
+  active = targetEl;
+  document.body.classList.add('dimmed');
+  targetEl.classList.add('active');
+
+  const rect = targetEl.getBoundingClientRect();
+  const sc = Math.min(
+    (window.innerWidth * 0.58) / rect.width,
+    (window.innerHeight * 0.78) / rect.height
+  );
+
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2;
+  const sx = rect.left + rect.width / 2;
+  const sy = rect.top + rect.height / 2;
+
+  targetEl.style.transform = `translate(${cx - sx}px, ${cy - sy}px) scale(${sc}) rotate(0deg)`;
+}
+
+function deactivate() {
+  if (!active) return;
+  const el = active;
+  const data = stampEls.find(s => s.el === el).data;
+
+  el.classList.remove('active');
+  el.style.transform = getInitialTransform(data, Math.sin(time + data.rot) * 4);
+  document.body.classList.remove('dimmed');
+  active = null;
+}
+
+stampEls.forEach(({ el }) => {
+  el.addEventListener('click', e => {
+    e.stopPropagation();
+    if (el.classList.contains('active')) {
+      deactivate();
+    } else {
+      activate(el);
+    }
+  });
+});
+
+document.addEventListener('click', () => deactivate());
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') deactivate();
+});
+
+window.addEventListener('resize', () => {
+  if (active) deactivate();
+});
+</script>
+
+</body>
+</html>
